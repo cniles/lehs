@@ -29,6 +29,8 @@
   (apply hash-map (mapcat process-header c)))
 
 (defn read-head [stream]
+  "Takes a stream and reads the request head (request line and headers, up to the first blank line.)  Returns a vector
+  where the first item is the string value of the head and the second item is a lazy sequence of the message body."
   (let [sseq (repeatedly #(char (.read stream)))]
     (loop [head [] s sseq]
       (if (= [\return \newline \return \newline] (take-last 4 head))
@@ -39,8 +41,3 @@
 
 (defn process-req [head]
   {:req-ln (process-req-ln (first head)) :headers (process-headers (rest head))})
-
-(defn extract-message-body [req s]
-  (let [l (get (req :headers) "Content-Length")]
-    (if (nil? l) ""
-    (apply str (take (Integer/parseInt l) s)))))

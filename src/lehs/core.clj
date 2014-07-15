@@ -27,22 +27,17 @@
     pg))
 
 
-; request format:
+; request map structure:
 ;{:req-ln {:method :get|:post|:...
 ;          :uri {:path "/p/a/t/h"
-;                :query {"a" "1" "b" "2"}
+;                :query {"a" "1", "b" "2"}
 ;                :fragment "Frag"}
 ;          :version "HTTP/1.1"}
-; :headers {"H1:" "1" "H2:" "2"}
-; :msg-body '("FOO" "BAR" "BLAH"}
+; :headers {"H1:" "1", "H2:" "2"}
+; :messsage {:foo "bar", :boo "far"}
 
 
 (defn bb-entry-to-table-row [r] [:tr [:td (r :Name ":")] [:td (r :Content)]])
-
-(map bb-entry-to-table-row (get-bb))
-
-(get-bb)
-
 
 (def pages {"/"
             (defpage
@@ -149,6 +144,12 @@
   "Writes string s to the output stream of socket."
   (.write (.getOutputStream socket) (.getBytes s)))
 
+(defn extract-req [stream]
+  "Extracts the request from the an input stream"
+  (let [head-and-body (read-head stream)
+        head (process-req (head-and-body 0))]
+    (assoc head :message (decode-message head (head-and-body 1)))))
+
 (defn accept-connection-and-send-response [server-socket]
 
   "Accepts a connection to the server socket (only argument) and sends a response as side effects.  Also sends the processed request and response to stdout.
@@ -156,21 +157,17 @@
   (per java.net.ServerSocket/accept)"
 
   (let [socket (.accept server-socket)]
-        (try
-          (let [req-vals (read-head (.getInputStream socket))
-                head-vals (process-req (first req-vals))
-                req (assoc head-vals
-                      :message ((get decoder-map ((:headers head-vals) "Content-Type") identity)
-                                (extract-message-body head-vals (second req-vals))))
-                f (get method-fns (-> req :req-ln :method) (method-fns :500))
-                response (f req)]
-            (println (str "Receieved request " req))
-            (println (str "Sending response:\n" response))
-            (write-to-socket socket response)
-            (if (= "/killserver" (:path (:uri (:req-ln req))))
-               :kill))
-          (catch Exception e (.printStackTrace e))
-          (finally (.close socket)))))
+    (try
+      (let [req (extract-req (.getInputStream socket))
+            f (get method-fns (-> req :req-ln :method) (method-fns :500))
+            response (f req)]
+        (println (str "Receieved request " req))
+        (println (str "Sending response:\n" response))
+        (write-to-socket socket response)
+        (if (= "/killserver" (-> req :req-ln :uri :path))
+          :kill))
+      (catch Exception e (println (.getMessage e)))
+      (finally (.close socket)))))
 
 (defn run-server [port]
   (let [server-socket (ServerSocket. port 1)]
@@ -182,6 +179,7 @@
       (.close server-socket))
     (println "Server shutting down")
     'clean-exit)
+
 
 (def run (future (run-server 8080)))
 
