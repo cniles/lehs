@@ -116,12 +116,16 @@
 ; Returns a response (string)
 ;
 (defn gen-response [msg code]
+  (str (gen-head-response msg code)
+       msg))
+
+(defn gen-head-response [msg code]
   (str (response-line code)
        (date-header)
        (content-length-header msg)
        (content-type-header "text/html")
-       blank-ln
-       msg))
+       blank-ln))
+
 
 (def method-fns
   {:get
@@ -132,6 +136,11 @@
    :post
     (fn [req]
      (gen-response ((get pages (-> req :req-ln :uri :path) (get pages :404)) req)
+                   (if (contains? pages (-> req :req-ln :uri :path)) 200 404)))
+
+   :head
+    (fn [req]
+     (gen-head-response ((get pages (-> req :req-ln :uri :path) (get pages :404)) req)
                    (if (contains? pages (-> req :req-ln :uri :path)) 200 404)))
 
    :500
