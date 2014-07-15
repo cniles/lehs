@@ -1,16 +1,7 @@
 (ns lehs.request)
 
-;
-; Process the request line
-;
-(def method-map {"OPTIONS" :options
-                 "GET" :get
-                 "HEAD" :head
-                 "POST" :post
-                 "PUT" :put
-                 "DELETE" :delete
-                 "TRACE" :trace
-                 "CONNECT" :connect})
+(defn get-method [s]
+  (keyword (.toLowerCase s)))
 
 (defn process-query [query-str]
   (apply hash-map (let [s (clojure.string/split query-str #"[=&\;]")]
@@ -37,7 +28,7 @@
         [(clojure.string/split (apply str head) #"(\r\n)+") s] (recur (conj head (first s)) (drop 1 s))))))
 
 (defn process-req-ln [req-str]
-  (let [p (fn [[rs uri v]] {:method (method-map rs) :uri (process-uri uri) :version v})] (p (clojure.string/split req-str #" "))))
+  (let [p (fn [[rs uri v]] {:method (get-method rs) :uri (process-uri uri) :version v})] (p (clojure.string/split req-str #" "))))
 
 (defn process-req [head]
   {:req-ln (process-req-ln (first head)) :headers (process-headers (rest head))})
