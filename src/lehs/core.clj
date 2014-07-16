@@ -2,9 +2,11 @@
   (:require [monger.core :as mg]
             [monger.collection :as mc])
   (:use hiccup.core
+  	hiccup.page
         lehs.header
         lehs.request
-        lehs.decode)
+        lehs.decode
+	lehs.page)
   (:import [java.net ServerSocket Socket]
            [java.util Calendar Locale TimeZone]))
 
@@ -16,16 +18,6 @@
 (def db (mg/get-db conn "mydb"))
 (defn add-bb-entry [entry] (mc/insert db "bb" entry))
 (defn get-bb [] (mc/find-maps db "bb"))
-
-
-(defmacro defpage
-  "Wrapper macro for creating the page-generating functions"
-  [pg]
-  (list 'fn [{{'method :method {:keys ['path 'query 'fragment]} :uri} :req-ln
-        'headers :headers
-        'message :message}]
-    pg))
-
 
 ; request map structure:
 ;{:req-ln {:method :get|:post|:...
@@ -39,113 +31,107 @@
 
 (defn bb-entry-to-table-row [r] [:tr [:td (r :Name ":")] [:td (r :Content)]])
 
-(def pages {"/"
-            (defpage
-              (html [:html
-                  [:body
-                   [:h1 "This is the root page"]
-                   [:ul
-                    [:li [:a {:href "a"} "To page A"]]
-                    [:li [:a {:href "b"} "To page B"]]
-                    [:li [:a {:href "d"} "Bulletin board"]]
-                    [:li [:a {:href "killserver"}"Kill it"]]]
-                   [:p "Thanks for visiting!"]
-                   ]]))
+(defpage "/foo.css"
+	(slurp "foo.css"))
 
-            "/a"
-            (defpage
-              (html [:html
-                     [:body
-                      [:p "This is page A"]
-                      [:ul
-                       [:li [:a {:href "b"} "To page B"]]
-                       [:li [:a {:href "/"} "Home"]]
-                      ]]]))
+(defpage "/"
+  (html5 [:html
+	[:head (include-css "foo.css")]
+	[:body
+	[:h1 "This is the root page"]
+	[:ul
+	[:li [:a {:href "a"} "To page A"]]
+	[:li [:a {:href "b"} "To page B"]]
+	[:li [:a {:href "d"} "Bulletin board"]]
+	[:li [:a {:href "killserver"}"Kill it"]]]
+	[:p "Thanks for visiting!"]]]))
 
-            "/b"
-            (defpage
-              (html [:html
-                     [:body
-                      [:p "This is page B"]
-                      [:ul
-                       [:li [:a {:href "a"} "To page A"]]
-                       [:li [:a {:href "/"} "Home"]]
-                      ]]]))
+(defpage "/a"
+  (html5 [:html
+	[:body
+	[:p "This is page A"]
+	[:ul
+	[:li [:a {:href "b"} "To page B"]]
+	[:li [:a {:href "/"} "Home"]]
+	]]]))
 
-            "/c"
-            (defpage
-              (html [:html
-                     [:body
-                      [:form {:action "d" :method "POST"}
-                       "Name: " [:input {:type "text" :name "Name" :value "anon"}] [:br]
-                       "Content: " [:input {:type "text" :name "Content" :value ""}] [:br]
-                       [:input {:type "submit" :value "Submit"}]
-                       ]]]))
+(defpage "/b"
+  (html5 [:html
+	[:body
+	[:p "This is page B"]
+	[:ul
+	[:li [:a {:href "a"} "To page A"]]
+	[:li [:a {:href "/"} "Home"]]
+	]]]))
 
-            "/d"
-            (defpage
-              (do
-                (if (= :post method)
-                  (do (println (str "adding db entry" message)) (add-bb-entry message)))
-                (let [bb (get-bb)]
-                  (html [:html
-                       [:body
-                        [:table
-                         (map bb-entry-to-table-row bb)]
-                        ;[:table {:style "width:300px"}
-                        ; '([:tr [:td "Hello"] [:td "1"]] [:tr [:td "world"] [:td 2]])]
-                        [:a {:href "/c"} "Add new message"] [:br]
-                        [:a {:href "/d"} "Refresh"]
-                        ]]))))
+(defpage "/c"
+  (html5 [:html
+	[:body
+	[:form {:action "d" :method "POST"}
+	"Name: " [:input {:type "text" :name "Name" :value "anon"}] [:br]
+	"Content: " [:input {:type "text" :name "Content" :value ""}] [:br]
+	[:input {:type "submit" :value "Submit"}]
+	]]]))
 
-            "/killserver"
-            (fn [{q :query p :path f :fragment}] (html [:html [:body [:h1 "killing server"]]]))
+(defpage "/d"
+  (do
+   (if (= :post method)
+       (do (println (str "adding db entry" message)) (add-bb-entry message)))
+   (let [bb (get-bb)]
+	(html5 [:html
+	      [:body
+	      [:table
+	      (map bb-entry-to-table-row bb)]
+	      [:a {:href "/c"} "Add new message"] [:br]
+	      [:a {:href "/d"} "Refresh"]
+	      ]]))))
 
-            :404
-            (defpage
-              (html [:html [:body [:h1 "404 - Resource not found"] [:p "The specified resource, " path ", could not be found"]]]))
+(defpage "/killserver"
+  (html [:html [:body [:h1 "killing server"]]]))
 
-            :500
-            (defpage
-              (html [:html [:body [:h1 "500 - Unsupported operation: " method]]]))
+(defpage :404
+  (html [:html [:body 
+	[:h1 "404 - Resource not found"]
+	[:p "The specified resource, " path ", could not be found"]]]))
 
-            })
-
+(defpage :500
+  (html [:html [:body [:h1 "500 - Unsupported operation: " method]]]))
 
 ;
-; Returns a response (string)
+; Response generators
 ;
-(defn gen-response [msg code]
-  (str (gen-head-response msg code)
-       msg))
 
-(defn gen-head-response [msg code]
+(defn gen-head-response [msg code type]
   (str (response-line code)
        (date-header)
        (content-length-header msg)
-       (content-type-header "text/html")
+       (content-type-header type)
        blank-ln))
 
+(defn gen-response [msg code type]
+  (str (gen-head-response msg code type)
+       msg))
 
 (def method-fns
   {:get
    (fn [req]
-     (gen-response ((get pages (-> req :req-ln :uri :path) (get pages :404)) req)
-                   (if (contains? pages (-> req :req-ln :uri :path)) 200 404)))
+       (gen-response ((get @pages (-> req :req-ln :uri :path) (get @pages :404)) req)
+			   (if (contains? @pages (-> req :req-ln :uri :path)) 200 404)
+			   (-> req :headers :Content-Type)))
 
    :post
     (fn [req]
-     (gen-response ((get pages (-> req :req-ln :uri :path) (get pages :404)) req)
-                   (if (contains? pages (-> req :req-ln :uri :path)) 200 404)))
+     (gen-response ((get @pages (-> req :req-ln :uri :path) (get @pages :404)) req)
+                   (if (contains? @pages (-> req :req-ln :uri :path)) 200 404)))
 
    :head
     (fn [req]
-     (gen-head-response ((get pages (-> req :req-ln :uri :path) (get pages :404)) req)
-                   (if (contains? pages (-> req :req-ln :uri :path)) 200 404)))
+     (gen-head-response ((get @pages (-> req :req-ln :uri :path) (get @pages :404)) req)
+                   (if (contains? @pages (-> req :req-ln :uri :path)) 200 404)))
 
    :500
    (fn [req]
-     (gen-response ((get pages :500) req) 500))
+     (gen-response ((get @pages :500) req) 500))
    }
   )
 
@@ -190,6 +176,7 @@
     'clean-exit)
 
 
-(def run (future (run-server 8080)))
-
-;@run
+(defn -main
+      "Run the server"
+      [& args]
+      (println "Hello world"))
