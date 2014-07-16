@@ -1,6 +1,7 @@
-(ns lehs.request)
+(ns lehs.request
+  (:use lehs.common))
 
-(defn get-method [s]
+(defn method-keyword [s]
   (keyword (.toLowerCase s)))
 
 (defn process-query [query-str]
@@ -23,12 +24,12 @@
   "Takes a stream and reads the request head (request line and headers, up to the first blank line.)  Returns a vector
   where the first item is the string value of the head and the second item is a lazy sequence of the message body."
   (let [sseq (repeatedly #(char (.read stream)))]
-    (loop [head [] s sseq]
-      (if (= [\return \newline \return \newline] (take-last 4 head))
-        [(clojure.string/split (apply str head) #"(\r\n)+") s] (recur (conj head (first s)) (drop 1 s))))))
+    ((fn [[h s]] [(clojure.string/split (apply str h) #"(\r\n)+") s]) (split-at-subseq sseq "\r\n\r\n"))))
 
 (defn process-req-ln [req-str]
-  (let [p (fn [[rs uri v]] {:method (get-method rs) :uri (process-uri uri) :version v})] (p (clojure.string/split req-str #" "))))
+  (let [p (fn [[rs uri v]] {:method (method-keyword rs) :uri (process-uri uri) :version v})] (p (clojure.string/split req-str #" "))))
 
 (defn process-req [head]
   {:req-ln (process-req-ln (first head)) :headers (process-headers (rest head))})
+
+
