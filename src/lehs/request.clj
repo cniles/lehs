@@ -4,9 +4,10 @@
 (defn method-keyword [s]
   (keyword (.toLowerCase s)))
 
-(defn process-query [query-str]
-  (apply hash-map (let [s (clojure.string/split query-str #"[=&\;]")]
-                    (if (odd? (count s)) (butlast s) s))))
+(defn process-query [s]
+  "Returns a map of the keys and values in an http query string.
+  E.g. \"a=1&b=2\" would yield the map {:a 1, :b 2}"
+  (apply hash-map (mapcat #(get-key-value % "=") (clojure.string/split s #"[&]"))))
 
 (defn process-uri [uri]
   "Takes an an argument a URI string, and returns a map with the
@@ -17,14 +18,11 @@
      :query (process-query (m 2))
      :fragment (m 3)}))
 
-(defn process-header [h]
-  "Takes an HTTP header string (e.g. \"Content-Length: 123\" and
-  returns a two-tuple of a keyword created from the header name and
-  its value (as a string)"
-  ((fn [[_ k v]] [(keyword k) v]) (re-find #"([\w-]+): (.*)" h)))
-
 (defn process-headers [c]
-  (apply hash-map (mapcat process-header c)))
+  "Returns a map from a sequence of http header-strings.
+  E.g. [\"Content-Length: 123\" \"Content-Type: text/html\"] ->
+  {:Content-Length \"123\", :Content-Type: \"text/html\"}"
+  (apply hash-map (mapcat #(get-key-value % ": ") c)))
 
 (defn read-head [stream]
   "Takes a stream and reads the request head (request line and
