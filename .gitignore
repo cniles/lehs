@@ -40,3 +40,4 @@ target/repl-port
 .lein-repl-history
 targets/*
 *~
+*.clj#
