@@ -38,6 +38,6 @@ Icon
 .nrepl-port
 target/repl-port
 .lein-repl-history
-targets/*
+target/*
 *~
 *.clj#
