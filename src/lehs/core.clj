@@ -6,7 +6,7 @@
         lehs.header
         lehs.request
         lehs.decode
-	lehs.page)
+	lehs.resource)
   (:import [java.net ServerSocket Socket]))
 
 ;

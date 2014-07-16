@@ -1,4 +1,4 @@
-(ns lehs.page
+(ns lehs.resource
     (:use hiccup.core
     	  hiccup.page))
 
