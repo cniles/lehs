@@ -7,8 +7,7 @@
         lehs.request
         lehs.decode
 	lehs.page)
-  (:import [java.net ServerSocket Socket]
-           [java.util Calendar Locale TimeZone]))
+  (:import [java.net ServerSocket Socket]))
 
 ;
 ; Database stuff...
@@ -147,8 +146,11 @@
 
 (defn accept-connection-and-send-response [server-socket]
 
-  "Accepts a connection to the server socket (only argument) and sends a response as side effects.  Also sends the processed request and response to stdout.
-  Returns nil if a request is received to the resource 'killserver', indicating that the server is to die.  Blocks until a socket connection is accepted
+  "Accepts a connection to the server socket (only argument) and sends
+  a response as side effects.  Also sends the processed request and
+  response to stdout.  Returns nil if a request is received to the
+  resource 'killserver', indicating that the server is to die.  Blocks
+  until a socket connection is accepted
   (per java.net.ServerSocket/accept)"
 
   (let [socket (.accept server-socket)]
@@ -174,7 +176,6 @@
       (.close server-socket))
     (println "Server shutting down")
     'clean-exit)
-
 
 (defn -main
       "Run the server"
