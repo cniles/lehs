@@ -22,3 +22,6 @@
   "Splits a string at its delimeter, and returns a tuple of [(keyword k) v]"
   (map-funcs [keyword identity]
 	     (rest (re-find (re-pattern (str "(.+)" d "(.*)")) s))))
+
+(defn to-2nd [f [k v]]
+  [k (f v)])
