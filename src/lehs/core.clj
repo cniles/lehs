@@ -15,7 +15,8 @@
 
 (def conn (mg/connect))
 (def db (mg/get-db conn "mydb"))
-(defn add-bb-entry [entry] (mc/insert db "bb" entry))
+(defn add-bb-entry [entry] (if (every? entry [:Name :Content])
+                             (mc/insert db "bb" (select-keys entry [:Name :Content]))))
 (defn get-bb [] (mc/find-maps db "bb"))
 
 ; request map structure:
@@ -30,52 +31,58 @@
 
 (defn bb-entry-to-table-row [r] [:tr [:td (r :Name ":")] [:td (r :Content)]])
 
-(defpage "/foo.css"
-	(slurp "foo.css"))
+(defresource "/foo.css"
+  (slurp "foo.css")
+  "text/css")
 
-(defpage "/"
+(defresource "/"
   (html5 [:html
-	[:head (include-css "foo.css")]
-	[:body
-	[:h1 "This is the root page"]
-	[:ul
-	[:li [:a {:href "a"} "To page A"]]
-	[:li [:a {:href "b"} "To page B"]]
-	[:li [:a {:href "d"} "Bulletin board"]]
-	[:li [:a {:href "killserver"}"Kill it"]]]
-	[:p "Thanks for visiting!"]]]))
+          [:head (include-css "foo.css")]
+          [:body
+           [:h1 "Lehs test home"]
+           [:p "This website is only a series of pages used to test the lehs webserver."]
+           [:ul
+            [:li [:a {:href "a"} "To page A"]]
+            [:li [:a {:href "b"} "To page B"]]
+            [:li [:a {:href "d"} "Bulletin board"]]
+            [:li [:a {:href "killserver"} "Kill lehs"]]]
+           [:p "Thanks for visiting!"]]])
+  "text/html")
 
-(defpage "/a"
+(defresource "/a"
   (html5 [:html
 	[:body
 	[:p "This is page A"]
 	[:ul
 	[:li [:a {:href "b"} "To page B"]]
 	[:li [:a {:href "/"} "Home"]]
-	]]]))
+	]]])
+  "text/html")
 
-(defpage "/b"
+(defresource "/b"
   (html5 [:html
 	[:body
 	[:p "This is page B"]
 	[:ul
 	[:li [:a {:href "a"} "To page A"]]
 	[:li [:a {:href "/"} "Home"]]
-	]]]))
+	]]])
+  "text/html")
 
-(defpage "/c"
+(defresource "/c"
   (html5 [:html
 	[:body
 	[:form {:action "d" :method "POST"}
 	"Name: " [:input {:type "text" :name "Name" :value "anon"}] [:br]
 	"Content: " [:input {:type "text" :name "Content" :value ""}] [:br]
 	[:input {:type "submit" :value "Submit"}]
-	]]]))
+	]]])
+  "text/html")
 
-(defpage "/d"
+(defresource "/d"
   (do
    (if (= :post method)
-       (do (println (str "adding db entry" message)) (add-bb-entry message)))
+     (do (println (str "adding db entry" message)) (add-bb-entry message)))
    (let [bb (get-bb)]
 	(html5 [:html
 	      [:body
@@ -83,40 +90,52 @@
 	      (map bb-entry-to-table-row bb)]
 	      [:a {:href "/c"} "Add new message"] [:br]
 	      [:a {:href "/d"} "Refresh"]
-	      ]]))))
+	      ]])))
+  "text/html")
 
-(defpage "/killserver"
+(defresource "/killserver"
   (html [:html [:body [:h1 "killing server"]]]))
 
-(defpage :404
+(defresource :404
   (html [:html [:body 
-	[:h1 "404 - Resource not found"]
+	[:h1 "404 - Gadzooks!"]
 	[:p "The specified resource, " path ", could not be found"]]]))
 
-(defpage :500
+(defresource :500
   (html [:html [:body [:h1 "500 - Unsupported operation: " method]]]))
 
 ;
 ; Response generators
 ;
 
-(defn gen-head-response [msg code type]
-  (str (response-line code)
-       (date-header)
-       (content-length-header msg)
-       (content-type-header type)
-       blank-ln))
+(defn gen-head-response [rf req code]
+  (let [msg (rf req)]
+    (str (response-line code)
+         (date-header)
+         (content-length-header msg)
+         (content-type-header (type-map (-> req :uri :path)))
+         blank-ln)))
 
-(defn gen-response [msg code type]
-  (str (gen-head-response msg code type)
-       msg))
+(defn gen-response [rf req code]
+  (let [msg (rf req)]
+    (str (response-line code)
+         (date-header)
+         (content-length-header msg)
+         (content-type-header (type-map (-> req :uri :path)))
+         blank-ln
+         msg)))
+
+(defn get-resource [{{{path :path} :uri} :req-ln}]
+  (get @pages path (get @pages :404)))
+
+(defn resource-exists? [{{{path :path} :uri} :req-ln}]
+  (contains? @pages path))
 
 (def method-fns
   {:get
    (fn [req]
-       (gen-response ((get @pages (-> req :req-ln :uri :path) (get @pages :404)) req)
-			   (if (contains? @pages (-> req :req-ln :uri :path)) 200 404)
-			   (-> req :headers :Content-Type)))
+       (if (resource-exists? req) (gen-response (get-resource req) req 200)
+           (gen-response (@pages :404) req 404)))
 
    :post
     (fn [req]
@@ -158,7 +177,7 @@
       (let [req (extract-req (.getInputStream socket))
             f (get method-fns (-> req :req-ln :method) (method-fns :500))
             response (f req)]
-        (println (str "Receieved request " req))
+        (println (str "Receieved request:\n " req))
         (println (str "Sending response:\n" response))
         (write-to-socket socket response)
         (if (= "/killserver" (-> req :req-ln :uri :path))
