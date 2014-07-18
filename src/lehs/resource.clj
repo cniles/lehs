@@ -74,6 +74,12 @@
                                    'message :message}]
                              p) t)))
 
+(defn get-resource [{{{path :path} :uri} :req-ln}]
+  (get @pages path (get @pages :404)))
+
+(defn resource-exists? [{{{path :path} :uri} :req-ln}]
+  (contains? @pages path))
+
 ; Request this resource to kill the server
 (defresource "/killserver"
   (html [:html [:body [:h1 "killing server"]]]))
@@ -87,3 +93,8 @@
 ; Unsupported operation
 (defresource :500
   (html5 [:html [:body [:h1 "500 - Unsupported operation: " method]]]))
+
+; killserver page
+(defresource "/killserver"
+  (html [:html [:body [:h1 "killing server"]]]))
+

@@ -2,6 +2,8 @@
   (:use clojure.test
         lehs.resource
         lehs.core
+        lehs.request
+        lehs.response
         lehs.common))
 
 (defresource "/test"
