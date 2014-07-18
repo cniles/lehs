@@ -7,5 +7,5 @@
 		 [org.clojure/tools.namespace "0.2.5"]
                  [cider/cider-nrepl "0.6.0"]]
    :repl-options {:nrepl-middleware [lighttable.nrepl.handler/lighttable-ops]}
-   :main lehs.core
+   :main lehs.demo.core
   )
