@@ -26,5 +26,5 @@
 (defn to-2nd [f [k v]]
   [k (f v)])
 
-(def urange (apply vector (concat (range 0 128) (range -128 0))))
+(def urange  (apply vector (map byte (concat (range 0 128) (range -128 0)))))
 (defn ubyte [n] (urange (bit-and 0xff n)))

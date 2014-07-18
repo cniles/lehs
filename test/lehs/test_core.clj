@@ -77,4 +77,5 @@
          (ubyte (byte -128)))
   (is (= 1 (ubyte 1)))
   (is (= 127 (ubyte 127)))
-  (is (= -128 (ubyte 128))))
+  (is (= -128 (ubyte 128)))
+  (is (every? #(= (type (byte 0)) %) (map type urange))))
