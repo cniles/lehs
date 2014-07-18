@@ -1,5 +1,6 @@
 (ns lehs.request
-  (:use lehs.common))
+  (:use lehs.common
+        lehs.decode))
 
 (defn method-keyword [s]
   (keyword (.toLowerCase s)))
@@ -47,4 +48,10 @@
   request."
   {:req-ln (process-req-ln (first head)) :headers (process-headers (rest head))})
 
+(defn extract-req [stream]
+  "Extracts the request from the an input stream"
+  (let [head-and-body (read-head stream)
+        head (process-req (head-and-body 0))]
+    (println "Extracting request")
+    (assoc head :message (decode-message head (head-and-body 1)))))
 
