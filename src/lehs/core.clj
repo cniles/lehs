@@ -3,10 +3,12 @@
             [monger.collection :as mc])
   (:use hiccup.core
   	hiccup.page
+	gzip-util.core
         lehs.header
         lehs.request
         lehs.decode
-	lehs.resource)
+	lehs.resource
+	lehs.common)
   (:import [java.net ServerSocket Socket]))
 
 ;
@@ -32,11 +34,14 @@
 (defn bb-entry-to-table-row [r] [:tr [:td (r :Name ":")] [:td (r :Content)]])
 
 (defresource "/foo.css"
-  (slurp "foo.css")
-  "text/css")
+  (.getBytes (slurp "foo.css")))
+
+(defresource "/air.png"
+  (byte-array (let [s (java.io.FileInputStream. "air.png")]
+       (map ubyte (take-while #(not= -1 %) (repeatedly #(.read s)))))))
 
 (defresource "/"
-  (html5 [:html
+  (.getBytes (html5 [:html
           [:head (include-css "foo.css")]
           [:body
            [:h1 "Lehs test home"]
@@ -46,38 +51,35 @@
             [:li [:a {:href "b"} "To page B"]]
             [:li [:a {:href "d"} "Bulletin board"]]
             [:li [:a {:href "killserver"} "Kill lehs"]]]
-           [:p "Thanks for visiting!"]]])
-  "text/html")
+	   [:img {:src "/air.png" :width "42" :height "42"}]
+           [:p "Thanks for visiting!"]]])))
 
 (defresource "/a"
-  (html5 [:html
+  (.getBytes (html5 [:html
 	[:body
 	[:p "This is page A"]
 	[:ul
 	[:li [:a {:href "b"} "To page B"]]
 	[:li [:a {:href "/"} "Home"]]
-	]]])
-  "text/html")
+	]]])))
 
 (defresource "/b"
-  (html5 [:html
+  (.getBytes (html5 [:html
 	[:body
 	[:p "This is page B"]
 	[:ul
 	[:li [:a {:href "a"} "To page A"]]
 	[:li [:a {:href "/"} "Home"]]
-	]]])
-  "text/html")
+	]]])))
 
 (defresource "/c"
-  (html5 [:html
+  (.getBytes (html5 [:html
 	[:body
 	[:form {:action "d" :method "POST"}
 	"Name: " [:input {:type "text" :name "Name" :value "anon"}] [:br]
 	"Content: " [:input {:type "text" :name "Content" :value ""}] [:br]
 	[:input {:type "submit" :value "Submit"}]
-	]]])
-  "text/html")
+	]]])))
 
 (defresource "/d"
   (do
@@ -90,8 +92,7 @@
 	      (map bb-entry-to-table-row bb)]
 	      [:a {:href "/c"} "Add new message"] [:br]
 	      [:a {:href "/d"} "Refresh"]
-	      ]])))
-  "text/html")
+	      ]]))))
 
 (defresource "/killserver"
   (html [:html [:body [:h1 "killing server"]]]))
@@ -108,22 +109,22 @@
 ; Response generators
 ;
 
-(defn gen-head-response [rf req code]
-  (let [msg (rf req)]
-    (str (response-line code)
-         (date-header)
-         (content-length-header msg)
-         (content-type-header (type-map (-> req :uri :path)))
-         blank-ln)))
+(defn accept-gzip? [req]
+  (if (contains? (req :headers) :Accept-Encoding)
+    (let [es (map #(re-find #"(\*|\w+);q=(0(\.\d?\d?\d?)?|1(\.0?0?0?)?)" %)
+                  (clojure.string/split (-> req :headers :Accept-Encoding) #", "))]
+      (contains? (into {} (map (fn [[_ e q]] [(keyword e) q]) es)) :gzip))
+    false))
+  
 
 (defn gen-response [rf req code]
   (let [msg (rf req)]
-    (str (response-line code)
-         (date-header)
-         (content-length-header msg)
-         (content-type-header (type-map (-> req :uri :path)))
-         blank-ln
-         msg)))
+    {:res-ln (response-line code),
+     :headers {:Date (http-date-string),
+               :Content-Length (count msg),
+               :Content-Type (get-type req),
+               :Content-Encoding (if (accept-gzip? req) "gzip" "identity")},
+     :message msg}))
 
 (defn get-resource [{{{path :path} :uri} :req-ln}]
   (get @pages path (get @pages :404)))
@@ -137,25 +138,22 @@
        (if (resource-exists? req) (gen-response (get-resource req) req 200)
            (gen-response (@pages :404) req 404)))
 
-   :post
-    (fn [req]
-     (gen-response ((get @pages (-> req :req-ln :uri :path) (get @pages :404)) req)
-                   (if (contains? @pages (-> req :req-ln :uri :path)) 200 404)))
-
-   :head
-    (fn [req]
-     (gen-head-response ((get @pages (-> req :req-ln :uri :path) (get @pages :404)) req)
-                   (if (contains? @pages (-> req :req-ln :uri :path)) 200 404)))
-
    :500
    (fn [req]
      (gen-response ((get @pages :500) req) 500))
    }
   )
 
-(defn write-to-socket [socket s]
-  "Writes string s to the output stream of socket."
-  (.write (.getOutputStream socket) (.getBytes s)))
+(defn write-string-to-stream [stream s]
+  (.write stream (.getBytes s)))
+
+(defn write-response-to-stream [stream res]
+  (do (write-string-to-stream stream (str (res :res-ln) "\r\n"))
+      (doall (map (fn [[k v]] (write-string-to-stream stream (str (name k) ": " v "\r\n"))) (res :headers )))
+      (write-string-to-stream stream "\r\n")
+      (.write stream (res :message))))
+
+  
 
 (defn extract-req [stream]
   "Extracts the request from the an input stream"
@@ -177,17 +175,17 @@
       (let [req (extract-req (.getInputStream socket))
             f (get method-fns (-> req :req-ln :method) (method-fns :500))
             response (f req)]
-        (println (str "Receieved request:\n " req))
+        (println (str "Receieved request:\n " req "\n"))
         (println (str "Sending response:\n" response))
-        (write-to-socket socket response)
+        (write-response-to-stream (.getOutputStream socket) response)
         (if (= "/killserver" (-> req :req-ln :uri :path))
           :kill))
-      (catch Exception e (println (.getMessage e)))
+      (catch Exception e (do (println (str "Exception occured: " (.getMessage e)))) :kill)
       (finally (.close socket)))))
 
 (defn run-server [port]
   (let [server-socket (ServerSocket. port 1)]
-    (println (str "Server started on port " port ", listening for connections..."))
+    (println (str "Server started on port " port ", listening for connections...\n"))
     (loop [i 0]
       (if (accept-connection-and-send-response server-socket)
         nil
