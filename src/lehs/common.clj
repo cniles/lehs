@@ -25,3 +25,5 @@
 
 (defn to-2nd [f [k v]]
   [k (f v)])
+
+(defn ubyte [v] (byte (bit-or (if (bit-test (int v) 7) (byte -128) 0) (bit-and (int v) 0x7f))))
