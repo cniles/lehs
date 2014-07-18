@@ -41,3 +41,4 @@ target/repl-port
 target/*
 *~
 *.clj#
+.lein-failures
