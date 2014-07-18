@@ -1,6 +1,9 @@
 (ns lehs.response
   (:use lehs.resource
+        lehs.common
         lehs.header))
+
+(defn get-code [req] (if (resource-exists? req) 200 404))
 
 (defn accept-gzip? [req]
   (if (contains? (req :headers) :Accept-Encoding)
@@ -9,27 +12,56 @@
       (contains? (into {} (map (fn [[_ e q]] [(keyword e) q]) es)) :gzip))
     false))
   
-(defn gen-response [rf req code]
-  (let [msg (rf req)]
-    {:res-ln (response-line code),
-     :headers {:Date (http-date-string),
-               :Content-Length (count msg),
-               :Content-Type (get-type req),
-               :Content-Encoding (if (accept-gzip? req) "gzip" "identity")},
-     :message msg}))
+(defn gen-base-response [req code]
+  {:res-ln (response-line code),
+   :headers {:Server "[lehs 0.0.1]",
+             :Date (http-date-string),
+             :Content-Type (get-type req),
+             :Content-Encoding (if (accept-gzip? req) "gzip" "identity")}
+   :message ""})
+
+(defn gen-get-response [rf req code]
+  (let [base-res (gen-base-response req code)
+        msg (rf req base-res)]
+    (if (map? msg) (assoc-in msg [:headers :Content-Length] (count (msg :message)))
+        (assoc-in-many base-res
+                       [[[:headers :Content-Length] (count msg)]
+                        [[:message] msg]]))))
+
+(defn gen-head-response [rf req code]
+  (assoc (gen-get-response rf req code) :message ""))
+
+(defn gen-post-response [rf req code]
+  (let [base-res (gen-base-response req code)
+        out (rf req  base-res)]
+    (if (map? out) (assoc-in-many base-res
+                                  [[[:res-ln :code] (if (zero? (count (out :message))) 204 200)]
+                                   [[:headers :Content-Length] (count (out :message))]])
+        (assoc-in-many base-res
+                       [[[:res-ln :code] (if (zero? (count out)) 204 200)]
+                        [[:headers :Content-Length] (count out)]
+                        [[:message] out]]))))                        
 
 (def method-fns
   {:get
    (fn [req]
-       (if (resource-exists? req) (gen-response (get-resource req) req 200)
-           (gen-response (@pages :404) req 404)))
+     (gen-get-response (get-resource req) req (get-code req)))
+
+   :head
+   (fn [req]
+     (gen-head-response (get-resource req) req (get-code req)))
+
+   :post
+   (fn [req]
+     (gen-post-response (get-resource req) req (get-code req)))
 
    :500
    (fn [req]
-     (gen-response ((get @pages :500) req) 500))
+     (gen-get-response (get-resource req) req 500))
    }
   )
 
 (defn get-response [req]
   (println (str "Received request:\n" req "\n"))
-  ((get method-fns (-> req :req-ln :method) (method-fns :500)) req))
+  (if (resource-exists? req) ((get method-fns (-> req :req-ln :method) (method-fns :500)) req)
+      (gen-get-response (get-resource :404) req 404)))
