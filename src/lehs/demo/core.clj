@@ -3,14 +3,14 @@
         hiccup.page
         lehs.core
         lehs.resource
+        lehs.common
         lehs.db))
 
 (defresource "/foo.css"
   (.getBytes (slurp "foo.css")))
 
 (defresource "/air.png"
-  (byte-array (let [s (java.io.FileInputStream. "air.png")]
-       (map lehs.common/ubyte (take-while #(not= -1 %) (repeatedly #(.read s)))))))
+  (slurp-bytes "air.png"))
 
 (defresource "/"
   (.getBytes (html5 [:html
