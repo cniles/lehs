@@ -9,7 +9,6 @@
         lehs.db)
   (:import [java.net ServerSocket Socket]))
 
-
 (defn write-string-to-stream [stream s]
   (.write stream (.getBytes s)))
 
@@ -18,12 +17,6 @@
       (doall (map (fn [[k v]] (write-string-to-stream stream (str (name k) ": " v "\r\n"))) (res :headers )))
       (write-string-to-stream stream "\r\n")
       (.write stream (res :message))))
-
-(defn extract-req [stream]
-  "Extracts the request from the an input stream"
-  (let [head-and-body (read-head stream)
-        head (process-req (head-and-body 0))]
-    (assoc head :message (decode-message head (head-and-body 1)))))
 
 (defn accept-connection-and-send-response [server-socket]
 
@@ -38,12 +31,11 @@
     (try
       (let [req (extract-req (.getInputStream socket))
             response (get-response req)]
-        (println (str "Receieved request:\n " req "\n"))
         (println (str "Sending response:\n" response))
         (write-response-to-stream (.getOutputStream socket) response)
         (if (= "/killserver" (-> req :req-ln :uri :path))
           :kill))
-      (catch Exception e (do (println (str "Exception occured: " (.getMessage e)))) :kill)
+      (catch Exception e (do (.printStackTrace e) (println (str "Exception occured: " (.getMessage e)))) :kill)
       (finally (.close socket)))))
 
 (defn run-server [port]
@@ -56,8 +48,3 @@
       (.close server-socket))
     (println "Server shutting down")
     'clean-exit)
-
-(defn -main
-      "Run the server"
-      [& args]
-      (println "Hello world"))
