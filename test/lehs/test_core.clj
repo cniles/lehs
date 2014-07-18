@@ -71,11 +71,12 @@
          (let [stream (java.io.ByteArrayOutputStream.)]
            (do (write-response-to-stream stream test-res)
                (.toString stream))))))
-(deftest test-ubyte
+
+(deftest test-common
   ;; two-compliment -128 is 128 unsigned.
   (is (= 128)
          (ubyte (byte -128)))
   (is (= 1 (ubyte 1)))
   (is (= 127 (ubyte 127)))
   (is (= -128 (ubyte 128)))
-  (is (every? #(= (type (byte 0)) %) (map type urange))))
+  (is (every? #(= java.lang.Byte %) (map (comp type ubyte) (range 0 255)))))
