@@ -58,13 +58,13 @@
    (if (= :post method)
      (do (println (str "adding db entry" message)) (add-bb-entry message)))
    (let [bb (get-bb)]
-	(html5 [:html
+	(.getBytes (html5 [:html
 	      [:body
 	      [:table
 	      (map bb-entry-to-table-row bb)]
 	      [:a {:href "/c"} "Add new message"] [:br]
 	      [:a {:href "/d"} "Refresh"]
-	      ]]))))
+	      ]])))))
 
 (defn -main [& args]
   (run-server 8080))
