@@ -92,7 +92,7 @@
 
 ; Unsupported operation
 (defresource :500
-  (.getByttes (html5 [:html [:body [:h1 "500 - Unsupported operation: " method]]])))
+  (.getBytes (html5 [:html [:body [:h1 "500 - Unsupported operation: " method]]])))
 
 ; killserver page
 (defresource "/killserver"
