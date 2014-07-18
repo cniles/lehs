@@ -13,9 +13,11 @@
   (.write s (if (string? d) (.getBytes d) d)))
 
 (defn write-response-to-stream [stream res]
-  (do (write-to-stream stream (str (res :res-ln) "\r\n"))
+  (do (write-to-stream stream (str (-> res :res-ln :version) " "
+                                   (-> res :res-ln :code) " "
+                                   (-> res :res-ln :reason-phrase) "\r\n"))
       (doall (map (fn [[k v]] (write-to-stream stream (str (name k) ": " v "\r\n")))
-                  (res :headers )))
+                  (res :headers)))
       (write-to-stream stream "\r\n")
       (write-to-stream stream (res :message))))
 
