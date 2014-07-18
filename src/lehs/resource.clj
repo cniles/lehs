@@ -82,19 +82,19 @@
 
 ; Request this resource to kill the server
 (defresource "/killserver"
-  (html [:html [:body [:h1 "killing server"]]]))
+  (.getBytes (html [:html [:body [:h1 "killing server"]]])))
 
 ; Page not found
 (defresource :404
-  (html5 [:html [:body 
+  (.getBytes (html5 [:html [:body 
     [:h1 "404 - Resource not found"]
-    [:p "The specified resource, " path ", could not be found"]]]))
+    [:p "The specified resource, " path ", could not be found"]]])))
 
 ; Unsupported operation
 (defresource :500
-  (html5 [:html [:body [:h1 "500 - Unsupported operation: " method]]]))
+  (.getByttes (html5 [:html [:body [:h1 "500 - Unsupported operation: " method]]])))
 
 ; killserver page
 (defresource "/killserver"
-  (html [:html [:body [:h1 "killing server"]]]))
+  (.getBytes (html [:html [:body [:h1 "killing server"]]])))
 
