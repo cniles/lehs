@@ -31,4 +31,5 @@
   )
 
 (defn get-response [req]
+  (println (str "Received request:\n" req "\n"))
   ((get method-fns (-> req :req-ln :method) (method-fns :500)) req))
