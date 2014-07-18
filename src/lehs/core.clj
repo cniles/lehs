@@ -3,7 +3,6 @@
             [monger.collection :as mc])
   (:use hiccup.core
   	hiccup.page
-	gzip-util.core
         lehs.header
         lehs.request
         lehs.decode
