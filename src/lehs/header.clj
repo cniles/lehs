@@ -6,9 +6,9 @@
 ;
 
 (defn response-line [code]
-  (let [codes {200 "200 OK"
-               404 "404 Not found"}]
-    (str "HTTP/1.1" " " (codes code))))
+  (let [code-phrases {200 "OK"
+                      404 "Not found"}]
+    {:version "HTTP/1.1" :code code :reason-phrase (code-phrases code)}))
 
 (defn http-date-string []
   (let [calendar (Calendar/getInstance)]
