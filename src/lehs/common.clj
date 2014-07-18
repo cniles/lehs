@@ -28,3 +28,7 @@
 
 (def urange  (apply vector (map byte (concat (range 0 128) (range -128 0)))))
 (defn ubyte [n] (urange (bit-and 0xff n)))
+
+(defn slurp-bytes [fname]
+  (byte-array (let [s (java.io.FileInputStream. "air.png")]
+       (map ubyte (take-while #(not= -1 %) (repeatedly #(.read s)))))))
