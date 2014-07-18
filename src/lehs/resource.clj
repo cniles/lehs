@@ -66,12 +66,12 @@
   ([r p]
      (list 'add-resource r (list 'fn [{{'method :method {:keys ['path 'query 'fragment]} :uri} :req-ln
                                    'headers :headers
-                                   'message :message}]
+                                   'message :message} 'res]
                              p)))
   ([r p t]
      (list 'add-resource r (list 'fn [{{'method :method {:keys ['path 'query 'fragment]} :uri} :req-ln
                                    'headers :headers
-                                   'message :message}]
+                                   'message :message} 'res]
                              p) t)))
 
 (defn get-resource [{{{path :path} :uri} :req-ln}]
