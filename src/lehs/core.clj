@@ -9,14 +9,15 @@
         lehs.db)
   (:import [java.net ServerSocket Socket]))
 
-(defn write-string-to-stream [stream s]
-  (.write stream (.getBytes s)))
+(defn write-to-stream [s d]
+  (.write s (if (string? d) (.getBytes d) d)))
 
 (defn write-response-to-stream [stream res]
-  (do (write-string-to-stream stream (str (res :res-ln) "\r\n"))
-      (doall (map (fn [[k v]] (write-string-to-stream stream (str (name k) ": " v "\r\n"))) (res :headers )))
-      (write-string-to-stream stream "\r\n")
-      (.write stream (res :message))))
+  (do (write-to-stream stream (str (res :res-ln) "\r\n"))
+      (doall (map (fn [[k v]] (write-to-stream stream (str (name k) ": " v "\r\n")))
+                  (res :headers )))
+      (write-to-stream stream "\r\n")
+      (write-to-stream stream (res :message))))
 
 (defn accept-connection-and-send-response [server-socket]
 
