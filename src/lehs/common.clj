@@ -27,4 +27,4 @@
   [k (f v)])
 
 (def urange (apply vector (range 0 128) (range -128 0)))
-(defn ubyte [n] (urange n))
+(defn ubyte [n] (urange (bit-and 0xff n)))
