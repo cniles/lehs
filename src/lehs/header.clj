@@ -12,8 +12,7 @@
 
 (defn http-date-string []
   (let [calendar (Calendar/getInstance)]
-    (str "Date: "
-    	 (.getDisplayName calendar Calendar/DAY_OF_WEEK Calendar/SHORT Locale/US) ", "
+    (str (.getDisplayName calendar Calendar/DAY_OF_WEEK Calendar/SHORT Locale/US) ", "
          (.get calendar Calendar/DAY_OF_MONTH) " "
          (.getDisplayName calendar Calendar/MONTH Calendar/SHORT Locale/US) " "
          (.get calendar Calendar/YEAR) " "
