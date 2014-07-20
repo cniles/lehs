@@ -32,6 +32,7 @@
                :headers {:Date (lehs.header/http-date-string),
                          :Content-Length 26,
                          :Content-Type "text/html",
+                         :Server "[lehs 0.0.1]",
                          :Content-Encoding "gzip"},
                :message (.getBytes "<html><body></body></html>")})
 
@@ -55,6 +56,7 @@
 
 (deftest test-gen-response
   (is (true? (accept-gzip? {:headers {:Accept-Encoding "gzip;q=1.0"}})))
+  (is (true? (accept-gzip? {:headers {:Accept-Encoding "gzip, compress"}})))
   (is (= (fix-date (msg-to-seq test-res))
          (fix-date (msg-to-seq (gen-get-response (@pages (-> test-req :req-ln :uri :path))
                                    test-req
