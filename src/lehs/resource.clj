@@ -96,5 +96,5 @@
 
 ; killserver page
 (defresource "/killserver"
-  (.getBytes (html [:html [:body [:h1 "killing server"]]])))
+  (.getBytes (html5 [:html [:body [:h1 "killing server"]]])))
 
