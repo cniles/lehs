@@ -12,6 +12,12 @@
 (defn write-to-stream [s d]
   (.write s (if (string? d) (.getBytes d) d)))
 
+(defn write-to-gzip-stream [s d]
+  (let [gs (java.util.zip.GZIPOutputStream. s)]
+    (do (write-to-stream gs d)
+        (println "Wrote compressed!!")
+        (.finish gs))))
+
 (defn write-response-to-stream [stream res]
   (do (write-to-stream stream (str (-> res :res-ln :version) " "
                                    (-> res :res-ln :code) " "
@@ -19,7 +25,9 @@
       (doall (map (fn [[k v]] (write-to-stream stream (str (name k) ": " v "\r\n")))
                   (res :headers)))
       (write-to-stream stream "\r\n")
-      (write-to-stream stream (res :message))))
+      (if (= "gzip" (get-in res [:headers :Content-Encoding]))
+        (write-to-gzip-stream stream (:message res))
+        (write-to-stream (:message res)))))
 
 (defn accept-connection-and-send-response [server-socket]
 
@@ -27,18 +35,18 @@
   a response as side effects.  Also sends the processed request and
   response to stdout.  Returns nil if a request is received to the
   resource 'killserver', indicating that the server is to die.  Blocks
-  until a socket connection is accepted
-  (per java.net.ServerSocket/accept)"
+  until a socket connection is accepted (per java.net.ServerSocket/accept)"
 
   (let [socket (.accept server-socket)]
     (try
+      (println "Client connected from " (.toString (.getRemoteSocketAddress socket)) "\n")
       (let [req (extract-req (.getInputStream socket))
             response (get-response req)]
         (println (str "Sending response:\n" response))
         (write-response-to-stream (.getOutputStream socket) response)
         (if (= "/killserver" (-> req :req-ln :uri :path))
           :kill))
-      (catch Exception e (do (.printStackTrace e) (println (str "Exception occured: " (.getMessage e)))) :kill)
+      (catch Exception e (do (.printStackTrace e) (println (str "Exception occured: " (.getMessage e)))))
       (finally (.close socket)))))
 
 (defn run-server [port]
