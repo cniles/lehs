@@ -8,7 +8,7 @@
 
 (defn stream-seq [s]
   "Returns a lazy sequence of the items read off of a stream"
-      (repeatedly #(char (.read s))))
+      (map char (take-while pos? (repeatedly #(.read s)))))
 
 (defn map-funcs [fs c]
   "Returns a sequence consisting of applying first item in fs to the
