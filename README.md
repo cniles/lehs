@@ -1,4 +1,5 @@
 # lehs
+
 ## Lightweight Embeddable HTTP Server
 
 lehs is a hyper-text transfer protocol (http) web server implemented in clojure.  Rather than being a full-feature, scalable web service, it is meant to provide a light-weight and easy to use API for embedding a web server (and, consequently, a web interface) into your application.
@@ -75,12 +76,12 @@ Resulting in some HTML like the following:
 </html>
 ```
 
-[ ] TODO: document returning response map structure instead of string (or byte array).
+TODO: document returning response map structure instead of string (or byte array).
 
-#Appendix
+# Appendix
 
-Request map format:
--------------------
+## Request map format:
+
 ```clojure
 {:req-ln {:method :get|:post|:head|:delete
           :uri {:path "val",
@@ -91,11 +92,17 @@ Request map format:
  :messsage {:foo "bar", :boo "far"}}
 ```
 
-Response map format:
---------------------
+## Response map format:
+
 ```
 {:res-ln {:version "string" :code int  :reason-phrase "string"}
  :headers {:k1 "val",
            :k2 "val"}
  :message byte-array | "string"}
 ```
+
+## Project TODOs:
+
+- [ ] Decode percent-encoding in URI query
+- [ ] Support adding directory contents as a resource, e.g. `(defresource-dir "/images/")` should add all the files in the directory images into the lehs resource map.
+- [ ] More documentation!!!
