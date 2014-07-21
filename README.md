@@ -43,7 +43,7 @@ Then, to add the resource:
 
 Lehs provides a macro that makes it really easy to generate a new resource: `defresource`.  The macro will generate your function header (deconstructing the request map for you) and automatically add the resource to lehs' resource map.
 
-```
+```clojure
 ; Create and add our Hello world page, this time using defresource:
 (defresource "/hello.htm" "<html><body>Hello world!</html></body>")
 ```
@@ -58,6 +58,22 @@ query | The query part of the uri, which is actually a map of key-value pairs.  
 fragment | The fragment part of the uri
 headers | Any headers that the user agent ent with the request.  This is also a map, e.g. `{:Accept "text/html"}`
 message | The decoded message body.  In the case of a form message body sent with a post request (application/x-www-form-urlencoded), it is decoded into a map.  E.g. {:Name "Joe" :Occupation "Programmer" :Age "28"}
+
+So, if you receive a request for the URI "/foo/greet.html?name=Joe", your resource function can use the values in the query to tailor the response:
+```clojure
+(defresource "/foo/greet.html"
+  (html5 [:html [:body [:h1 "Greetings!"] [:p (if (nil? (query :name)) "Hello!")
+                                            (str "Hello, " (query :name) "!")]]]))
+```
+Resulting in some HTML like the following:
+```html
+<html>
+  <body>
+    <h1>Greetings!</h1>
+    <p>Hello, Joe!</p>
+  </body>
+</html>
+```
 
 [ ] TODO: document returning response map structure instead of string (or byte array).
 
