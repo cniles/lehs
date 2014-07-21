@@ -8,7 +8,7 @@ lehs is a hyper-text transfer protocol (http) web server implemented in clojure.
 
 Starting lehs is very easy.  You only need to call one function: `run-server`
 
-``` clojure
+``` clojuree
 ; Start lehs, listening for connections on port 8080
 (lehs.core/run-server 8080)
 ```
@@ -57,7 +57,7 @@ method | The request method (get, post, head etc...)
 path | The path to the resource from request line's URI
 query | The query part of the uri, which is actually a map of key-value pairs.  The query ?a=1&b=2 is parsed into `{:a 1, :b 2}`
 fragment | The fragment part of the uri
-headers | Any headers that the user agent ent with the request.  This is also a map, e.g. `{:Accept "text/html"}`
+headers | Any headers that the user agent sent with the request.  This is also a map, e.g. `{:Accept "text/html"}`
 message | The decoded message body.  In the case of a form message body sent with a post request (application/x-www-form-urlencoded), it is decoded into a map.  E.g. {:Name "Joe" :Occupation "Programmer" :Age "28"}
 
 So, if you receive a request for the URI "/foo/greet.html?name=Joe", your resource function can use the values in the query to tailor the response:
