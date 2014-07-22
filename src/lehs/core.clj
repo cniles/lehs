@@ -1,12 +1,6 @@
 (ns lehs.core
-  (:use hiccup.core
-  	hiccup.page
-        lehs.header
-        lehs.request
-        lehs.response
-        lehs.decode
-	lehs.common
-        lehs.db)
+  (:use lehs.request
+        lehs.response)
   (:import [java.net ServerSocket Socket]))
 
 (defn write-to-stream [s d]
@@ -15,7 +9,6 @@
 (defn write-to-gzip-stream [s d]
   (let [gs (java.util.zip.GZIPOutputStream. s)]
     (do (write-to-stream gs d)
-        (println "Wrote compressed!!")
         (.finish gs))))
 
 (defn write-response-to-stream [stream res]
