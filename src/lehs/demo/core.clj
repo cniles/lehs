@@ -5,11 +5,7 @@
         lehs.resource
         lehs.common))
 
-(defresource "/data/foo.css"
-  (.getBytes (slurp "C:data/foo.css")))
-
-(defresource "/air.png"
-  (slurp-bytes "air.png"))
+(defresource-dir ".\\data\\")
 
 (defresource "/"
   (.getBytes (html5 [:html
@@ -22,7 +18,7 @@
             [:li [:a {:href "b"} "To page B"]]
             [:li [:a {:href "d"} "Bulletin board"]]
             [:li [:a {:href "killserver"} "Kill lehs"]]]
-	   [:img {:src "/air.png" :width "42" :height "42"}]
+	   [:img {:src "/data/smiley.gif" :width "42" :height "42"}]
            [:p "Thanks for visiting!"]]])))
 
 (defresource "/a"
