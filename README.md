@@ -76,6 +76,20 @@ Resulting in some HTML like the following:
 </html>
 ```
 
+## Adding directory contents
+
+To create resources from the contents of a directory (recursively), use the function `defresource-dir.  If the contents of the directory ./data are the files
+
+- ./data/img/foo.png
+- ./data/css/foo.css
+
+The result of the following would be to add a resource for each, as "/data/img/foo.png" and /data/css/foo.css, respectively.
+
+```clojure
+; add contents of data directory to resources
+(defresource-dir ".\\data\\")
+```
+
 TODO: document returning response map structure instead of string (or byte array).
 
 # Appendix
@@ -101,10 +115,10 @@ TODO: document returning response map structure instead of string (or byte array
  :message byte-array | "string"}
 ```
 
-## Project TODOs:
+## Project TODOs for 0.1.0 (and add to clojars!):
 
 - [ ] Decode percent-encoding in URI query
 - [x] Support adding directory contents as a resource, e.g. `(defresource-dir "/images/")` should add all the files in the directory images into the lehs resource map.
 - [ ] HTTPS over SSL
 - [ ] Handle bad client requests with response of error code 400
-- [ ] More documentation!!!
+- [ ] Keep the documentation rolling!
