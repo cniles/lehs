@@ -76,14 +76,15 @@ Resulting in some HTML like the following:
 </html>
 ```
 
-## Adding directory contents
+### Adding directory contents
 
 To create resources from the contents of a directory (recursively), use the function `defresource-dir.  If the contents of the directory ./data are the files
 
+- ./data/foo.htm
 - ./data/img/foo.png
 - ./data/css/foo.css
 
-The result of the following would be to add a resource for each, as "/data/img/foo.png" and /data/css/foo.css, respectively.
+The result of the following would be to add a resource for each, as "/data/img/foo.htm", "/data/img/foo.png" and /data/css/foo.css, respectively.
 
 ```clojure
 ; add contents of data directory to resources
