@@ -1,4 +1,4 @@
-(ns lehs.encode
+(ns lehs.base64
   (:use lehs.common))
 
 (def pows-of-2 (map #(apply * (repeat % 2)) (range)))
