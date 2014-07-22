@@ -30,8 +30,14 @@
 (defn ubyte [n] (urange (bit-and 0xff n)))
 
 (defn slurp-bytes [fname]
-  (byte-array (let [s (java.io.FileInputStream. "air.png")]
+  (byte-array (let [s (java.io.FileInputStream. fname)]
        (map ubyte (take-while #(not= -1 %) (repeatedly #(.read s)))))))
 
 (defn assoc-in-many [m ksvs]
   (reduce (fn [m [ks v]] (assoc-in m ks v)) m ksvs))
+
+(defn to-abs-unix-path [path]
+  "converts an operating system relative path (starting with .) to a unix-like absolute path" 
+  (apply str (rest (clojure.string/replace path (java.io.File/separator) "/"))))
+
+
