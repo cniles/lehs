@@ -1,6 +1,8 @@
 (ns lehs.resource
     (:use hiccup.core
-    	  hiccup.page))
+    	  hiccup.page
+          lehs.common
+          clojure.java.io))
 
 ; In lehs, a web page (or resource, script, etc.) is simply a string
 ; (e.g. /blog) thats mapped to a string-returning function.  The
@@ -73,6 +75,14 @@
                                    'headers :headers
                                    'message :message} 'res]
                              p) t)))
+
+(defn defresource-dir [dir]
+     (if (.isDirectory (file dir))
+       (let [fs (filter #(and (.isFile %) (.canRead %))
+                        (file-seq (file dir)))]
+         (println "Adding resource dir")
+         (dorun (for [f fs]
+           (add-resource (to-abs-unix-path (.getPath f)) (fn [_ _] (slurp-bytes f))))))))
 
 (defn get-resource [{{{path :path} :uri} :req-ln}]
   (get @pages path (get @pages :404)))
