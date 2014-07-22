@@ -37,25 +37,23 @@
   resource 'killserver', indicating that the server is to die.  Blocks
   until a socket connection is accepted (per java.net.ServerSocket/accept)"
 
-  (let [socket (.accept server-socket)]
-    (try
+  (try
+    (with-open [socket (.accept server-socket)]
       (println "Client connected from " (.toString (.getRemoteSocketAddress socket)) "\n")
       (let [req (extract-req (.getInputStream socket))
             response (get-response req)]
         (println (str "Sending response:\n" response))
         (write-response-to-stream (.getOutputStream socket) response)
         (if (= "/killserver" (-> req :req-ln :uri :path))
-          :kill))
-      (catch Exception e (do (.printStackTrace e) (println (str "Exception occured: " (.getMessage e)))))
-      (finally (.close socket)))))
+          :kill)))
+    (catch Exception e (do (.printStackTrace e) (println "Exception occured: " (.getMessage e))))))
 
 (defn run-server [port]
-  (let [server-socket (ServerSocket. port 1)]
+  (with-open [server-socket (ServerSocket. port 1)]
     (println (str "Server started on port " port ", listening for connections...\n"))
     (loop [i 0]
       (if (accept-connection-and-send-response server-socket)
         nil
-        (recur (inc i))))
-      (.close server-socket))
+        (recur (inc i)))))
     (println "Server shutting down")
     'clean-exit)
