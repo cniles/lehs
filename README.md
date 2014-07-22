@@ -104,7 +104,7 @@ TODO: document returning response map structure instead of string (or byte array
 ## Project TODOs:
 
 - [ ] Decode percent-encoding in URI query
-- [ ] Support adding directory contents as a resource, e.g. `(defresource-dir "/images/")` should add all the files in the directory images into the lehs resource map.
+- [x] Support adding directory contents as a resource, e.g. `(defresource-dir "/images/")` should add all the files in the directory images into the lehs resource map.
 - [ ] HTTPS over SSL
 - [ ] Handle bad client requests with response of error code 400
 - [ ] More documentation!!!
