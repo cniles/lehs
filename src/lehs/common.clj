@@ -40,4 +40,4 @@
   "converts an operating system relative path (starting with .) to a unix-like absolute path" 
   (apply str (rest (clojure.string/replace path (java.io.File/separator) "/"))))
 
-
+(defn pad-seq [m p s] (apply concat (partition m m (repeat m p) s)))
