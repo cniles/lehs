@@ -30,8 +30,8 @@
 (defn ubyte [n] (urange (bit-and 0xff n)))
 
 (defn slurp-bytes [fname]
-  (byte-array (let [s (java.io.FileInputStream. fname)]
-       (map ubyte (take-while #(not= -1 %) (repeatedly #(.read s)))))))
+  (byte-array (with-open [s (java.io.FileInputStream. fname)]
+       (doall (map ubyte (take-while #(not= -1 %) (repeatedly #(.read s))))))))
 
 (defn assoc-in-many [m ksvs]
   (reduce (fn [m [ks v]] (assoc-in m ks v)) m ksvs))
