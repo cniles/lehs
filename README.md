@@ -84,7 +84,7 @@ To create resources from the contents of a directory (recursively), use the func
 - ./data/img/foo.png
 - ./data/css/foo.css
 
-The result of the following would be to add a resource for each, as "/data/img/foo.htm", "/data/img/foo.png" and /data/css/foo.css, respectively.
+The result of the following would be to add a resource for each, as "/data/foo.htm", "/data/img/foo.png" and /data/css/foo.css, respectively.  Each resource is created as a function the ignores the two arugments it is passed and returns a byte array of the file's contents.
 
 ```clojure
 ; add contents of data directory to resources
