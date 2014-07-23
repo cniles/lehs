@@ -41,3 +41,14 @@
   (apply str (rest (clojure.string/replace path (java.io.File/separator) "/"))))
 
 (defn pad-seq [m p s] (apply concat (partition m m (repeat m p) s)))
+
+(defn invert-map [m] (into {} (for [[k v] m] [v k])))
+
+(defn get-bit [b i]
+  (if (bit-test b i) 1 0))
+
+(defn get-bits [b n]
+  (map #(get-bit (int b) %) (reverse (range n))))
+
+(defn bits-to-int [bs] (reduce + (map #(* % %2) bs
+                                      (reverse (take (count bs) pows-of-2)))))
