@@ -81,4 +81,6 @@
   (is (= 1 (ubyte 1)))
   (is (= 127 (ubyte 127)))
   (is (= -128 (ubyte 128)))
-  (is (every? #(= java.lang.Byte %) (map (comp type ubyte) (range 0 255)))))
+  (is (every? #(= java.lang.Byte %) (map (comp type ubyte) (range 0 255))))
+  (is (= {1 :a 2 :b 3 :c} (invert-map {:a 1 :b 2 :c 3}))))
+
