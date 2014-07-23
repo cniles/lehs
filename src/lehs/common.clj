@@ -26,8 +26,9 @@
 (defn to-2nd [f [k v]]
   [k (f v)])
 
-(def urange  (apply vector (map byte (concat (range 0 128) (range -128 0)))))
-(defn ubyte [n] (urange (bit-and 0xff n)))
+(def -urange ^{:private true}
+  (apply vector (map byte (concat (range 0 128) (range -128 0)))))
+(defn ubyte [n] (-urange (bit-and 0xff n)))
 
 (defn slurp-bytes [fname]
   (byte-array (with-open [s (java.io.FileInputStream. fname)]
@@ -40,9 +41,11 @@
   "converts an operating system relative path (starting with .) to a unix-like absolute path" 
   (apply str (rest (clojure.string/replace path (java.io.File/separator) "/"))))
 
-(defn pad-seq [m p s] (apply concat (partition m m (repeat m p) s)))
+(defn pad-seq [m p s]
+  (apply concat (partition m m (repeat m p) s)))
 
-(defn invert-map [m] (into {} (for [[k v] m] [v k])))
+(defn invert-map [m]
+  (into {} (for [[k v] m] [v k])))
 
 (defn get-bit [b i]
   (if (bit-test b i) 1 0))
@@ -50,5 +53,8 @@
 (defn get-bits [b n]
   (map #(get-bit (int b) %) (reverse (range n))))
 
-(defn bits-to-int [bs] (reduce + (map #(* % %2) bs
-                                      (reverse (take (count bs) pows-of-2)))))
+(def -pows-of-2 ^{:private true}
+  (map #(apply * (repeat % 2)) (range)))
+(defn bits-to-int [bs]
+  (reduce + (map #(* % %2) bs
+                 (reverse (take (count bs) -pows-of-2)))))
