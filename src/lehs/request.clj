@@ -50,8 +50,8 @@
 
 (defn extract-req [stream]
   "Extracts the request from the an input stream"
+  (println "Extracting request")
   (let [head-and-body (read-head stream)
         head (process-req (head-and-body 0))]
-    (println "Extracting request")
     (assoc head :message (decode-message head (head-and-body 1)))))
 
