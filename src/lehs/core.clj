@@ -3,6 +3,11 @@
         lehs.response)
   (:import [java.net ServerSocket Socket]))
 
+(def kill-server? (ref false))
+
+(defn kill-server []
+  (dosync (ref-set kill-server? true)))
+
 (defn write-to-stream [s d]
   (.write s (if (string? d) (.getBytes d) d)))
 
@@ -22,7 +27,7 @@
         (write-to-gzip-stream stream (:message res))
         (write-to-stream (:message res)))))
 
-(defn accept-connection-and-send-response [server-socket]
+(defn read-req-and-send-response [socket]
 
   "Accepts a connection to the server socket (only argument) and sends
   a response as side effects.  Also sends the processed request and
@@ -31,20 +36,27 @@
   until a socket connection is accepted (per java.net.ServerSocket/accept)"
 
   (try
-    (with-open [socket (.accept server-socket)]
-      (println "Client connected from " (.toString (.getRemoteSocketAddress socket)) "\n")
-      (let [req (extract-req (.getInputStream socket))
-            response (get-response req)]
-        (println (str "Sending response:\n" response))
-        (write-response-to-stream (.getOutputStream socket) response)))
+    (let [req (extract-req (.getInputStream socket))
+          response (get-response req)]
+      (println (str "Sending response:\n" response))
+      (write-response-to-stream (.getOutputStream socket) response))
     (catch Exception e (do (.printStackTrace e) (println "Exception occured: " (.getMessage e))))))
 
-(defn run-server [port]
-  (with-open [server-socket (ServerSocket. port 1)]
-    (println (str "Server started on port " port ", listening for connections...\n"))
-    (loop [i 0]
-      (if (accept-connection-and-send-response server-socket)
-        nil
-        (recur (inc i)))))
+(defn accept-connection [server-socket]
+  (let [socket (.accept server-socket)]
+    (println "Client connected from " (.toString (.getRemoteSocketAddress socket)) "\n")
+    (future (with-open [socket socket] (read-req-and-send-response socket)))))
+
+(defn server-loop [server-socket]
+  (loop []
+    (try (accept-connection server-socket)
+         (catch java.net.SocketTimeoutException e nil))
+    (if @kill-server? nil (recur))))
+  
+(defn run-server [http-port]
+  (with-open [server-socket (ServerSocket. http-port 1)]
+    (println (str "Server started on port " http-port ", listening for connections...\n"))
+    (.setSoTimeout server-socket 500)
+    (server-loop server-socket)
     (println "Server shutting down")
-    'clean-exit)
+    'clean-exit))
