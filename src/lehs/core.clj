@@ -1,9 +1,13 @@
 (ns lehs.core
   (:use lehs.request
         lehs.response)
-  (:import [java.net ServerSocket Socket]))
+  (:import [java.net ServerSocket Socket]
+           [javax.net.ssl SSLServerSocketFactory]))
 
 (def kill-server? (ref false))
+
+(defn- start-server []
+  (dosync (ref-set kill-server? false)))
 
 (defn kill-server []
   (dosync (ref-set kill-server? true)))
@@ -48,15 +52,25 @@
     (future (with-open [socket socket] (read-req-and-send-response socket)))))
 
 (defn server-loop [server-socket]
-  (loop []
-    (try (accept-connection server-socket)
-         (catch java.net.SocketTimeoutException e nil))
-    (if @kill-server? nil (recur))))
-  
-(defn run-server [http-port]
-  (with-open [server-socket (ServerSocket. http-port 1)]
-    (println (str "Server started on port " http-port ", listening for connections...\n"))
     (.setSoTimeout server-socket 500)
-    (server-loop server-socket)
+    (loop []
+      (try (accept-connection server-socket)
+           (catch java.net.SocketTimeoutException e nil))
+      (if @kill-server? nil (recur))))
+  
+(defn- create-server-socket [port]
+  (ServerSocket. port))
+
+(defn- create-ssl-server-socket [port]
+  (.createServerSocket (SSLServerSocketFactory/getDefault) port))
+
+(defn run-server [http-port https-port]
+  (with-open [http-server-socket (create-server-socket http-port)
+              https-server-socket (create-ssl-server-socket https-port)]
+    (println "HTTP Server started on port " http-port "(http), " https-port "(https)")
+    (start-server)
+    (doall (map deref
+                [(future (server-loop http-server-socket))
+                 (future (server-loop https-server-socket))]))
     (println "Server shutting down")
     'clean-exit))

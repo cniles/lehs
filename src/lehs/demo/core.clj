@@ -57,4 +57,6 @@
       (html5 [:html [:body [:h1 "killing server"]]])))
 
 (defn -main [& args]
+  (System/setProperty "javax.net.ssl.keyStore" "mySrvKeystore")
+  (System/setProperty "javax.net.ssl.keyStorePassword" "clojure")
   (run-server 8080))
