@@ -36,9 +36,7 @@
       (let [req (extract-req (.getInputStream socket))
             response (get-response req)]
         (println (str "Sending response:\n" response))
-        (write-response-to-stream (.getOutputStream socket) response)
-        (if (= "/killserver" (-> req :req-ln :uri :path))
-          :kill)))
+        (write-response-to-stream (.getOutputStream socket) response)))
     (catch Exception e (do (.printStackTrace e) (println "Exception occured: " (.getMessage e))))))
 
 (defn run-server [port]
