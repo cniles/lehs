@@ -51,5 +51,10 @@
                        [:input {:type "submit" :value "Submit"}]
                        ]]])))
 
+; killserver page
+(defresource "/killserver"
+  (do (kill-server)
+      (html5 [:html [:body [:h1 "killing server"]]])))
+
 (defn -main [& args]
   (run-server 8080))
