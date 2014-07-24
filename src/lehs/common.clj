@@ -54,7 +54,7 @@
   (map #(get-bit (int b) %) (reverse (range n))))
 
 (def -pows-of-2 ^{:private true}
-  (map #(apply * (repeat % 2)) (range)))
+  (iterate #(* 2 %) 1))
 (defn bits-to-int [bs]
   (reduce + (map #(* % %2) bs
                  (reverse (take (count bs) -pows-of-2)))))
