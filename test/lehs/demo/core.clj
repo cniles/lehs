@@ -59,4 +59,4 @@
 (defn -main [& args]
   (System/setProperty "javax.net.ssl.keyStore" "mySrvKeystore")
   (System/setProperty "javax.net.ssl.keyStorePassword" "clojure")
-  (run-server 8080))
+  (run-server 8080 9999))
