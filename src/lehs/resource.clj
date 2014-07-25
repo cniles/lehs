@@ -1,7 +1,5 @@
 (ns lehs.resource
-    (:use hiccup.core
-    	  hiccup.page
-          lehs.common
+    (:use lehs.common
           clojure.java.io))
 
 ; In lehs, a web page (or resource, script, etc.) is simply a string
@@ -90,16 +88,17 @@
 (defn resource-exists? [{{{path :path} :uri} :req-ln}]
   (contains? @pages path))
 
-; Request this resource to kill the server
-(defresource "/killserver"
-  (.getBytes (html [:html [:body [:h1 "killing server"]]])))
-
 ; Page not found
 (defresource :404
-  (.getBytes (html5 [:html [:body 
-    [:h1 "404 - Resource not found"]
-    [:p "The specified resource, " path ", could not be found"]]])))
+  (str "<!DOCTYPE html>\n"
+       "<html>"
+       "<body><h1>404 - Resource not found</h1>"
+       "<p>The specified resource, " path ", could not be found</p></body></html>"))
 
 ; Unsupported operation
 (defresource :500
-  (.getBytes (html5 [:html [:body [:h1 "500 - Unsupported operation: " method]]])))
+  (str "<!DOCTYPE html>\n"
+       "<html>"
+       "<body><h1>500 - Resource not found</h1>"
+       "<p>Unsupported request</p></body></html>"))
+
