@@ -14,7 +14,7 @@
   
 (defn gen-base-response [req code]
   {:res-ln (response-line code),
-   :headers {:Server "[lehs 0.0.1]",
+   :headers {:Server "[lehs]",
              :Date (http-date-string),
              :Content-Type (get-type req),
              :Content-Encoding (if (accept-gzip? req) "gzip" "identity")}
