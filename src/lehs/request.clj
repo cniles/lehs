@@ -15,7 +15,7 @@
    keys :path, :query, and :uri associated with those values of the
    URI"
   (let [m (re-find #"^([^?#]*)\??([^#]*)?#?(.*)?" uri)]
-    {:path (m 1)
+    {:path (decode-pct-encoded (m 1))
      :query (process-query (m 2))
      :fragment (m 3)}))
 
