@@ -4,24 +4,23 @@
         lehs.core
         lehs.resource
         lehs.common
-        lehs.db))
-
-(defn set-class-alt [[tag & vals]]
-  (apply vector (concat [tag {:class "alt"}] vals)))
-  
+        lehs.db
+        lehs.demo.core))
 
 (defn get-bb-html []
-  (let [rows (map (fn [r n] (if (odd? n) (assoc-in r [1 :class] "alt") r))
-                   (map bb-entry-to-table-row (get-bb)) (range))]
+  (let [rows (map (fn [r n] (if (odd? n) (assoc-in r [1 :class] "bbAlt") r))
+                  (map bb-entry-to-table-row (get-bb)) (range))]
     (.getBytes (html5 [:html
-                       [:head (include-css "/data/foo.css")]
-                       [:body
-                        [:a {:href "/c"} "Add new message"] "|" [:a {:href "/d"} "Refresh"] "|" [:a {:href "/"} "Home"] [:b]
-                        [:table {:id "bb"}
-                         [:tr [:th "Name"] [:th "Message"]]
-                         rows]
-                        [:a {:href "/c"} "Add new message"] "|" [:a {:href "/d"} "Refresh"] "|" [:a {:href "/"} "Home"] [:b]]]))))
-
+                       [:head (include-css "/data/style.css")]
+                       [:body {:class "core"}
+                        (make-header)
+                        [:div {:class "main"}
+                         [:div {:class "inner"}
+                          [:p [:a {:href "/c"} "Add a post"]]
+                          [:table {:class "bb"}
+                           [:tr {:id "bbHeader"} [:th {:class "bb"} "Name"] [:th {:class "bb"} "Message"]]
+                           rows]]]
+                        (make-sidebar)]]))))
 
 (defresource "/d"
   (assoc (if (= method :post)

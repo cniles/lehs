@@ -8,7 +8,9 @@
 (def db (mg/get-db conn "mydb"))
 
 (defn get-bb [] (mc/find-maps db "bb"))
-(defn bb-entry-to-table-row [r] [:tr {:id (r :_id)} [:td (h (r :Name))] [:td (h (r :Content))]])
+(defn bb-entry-to-table-row [r] [:tr {:id (r :_id) :class "bb"} 
+                                 [:td {:class "bb"} (h (r :Name))]
+                                 [:td {:class "bb"} (h (r :Content))]])
 
 (defn add-bb-entry [entry] (if (every? entry [:Name :Content])
                              (let [oid (ObjectId.)
