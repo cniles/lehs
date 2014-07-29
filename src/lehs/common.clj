@@ -18,10 +18,13 @@
   sequence [(f1 c1) (f2 c2) (f3 c3) ... (fn cn)]."
   (map #(% %2) fs c))
 
-(defn get-key-value [s d]
+(defn get-key-value
   "Splits a string at its delimeter, and returns a tuple of [(keyword k) v]"
-  (map-funcs [keyword identity]
-	     (rest (re-find (re-pattern (str "(.+)" d "(.*)")) s))))
+  ([s d]
+      (get-key-value s d identity))
+  ([s d f]
+      (map-funcs [(comp keyword f) f]
+		 (rest (re-find (re-pattern (str "(.+)" d "(.*)")) s)))))
 
 (defn to-2nd [f [k v]]
   [k (f v)])

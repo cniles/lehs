@@ -8,7 +8,8 @@
 (defn process-query [s]
   "Returns a map of the keys and values in an http query string.
   E.g. \"a=1&b=2\" would yield the map {:a 1, :b 2}"
-  (apply hash-map (mapcat #(get-key-value % "=") (clojure.string/split s #"[&]"))))
+  (apply hash-map (mapcat #(get-key-value % "=" decode-pct-encoded)
+			  (clojure.string/split s #"[&]"))))
 
 (defn process-uri [uri]
   "Takes an an argument a URI string, and returns a map with the
