@@ -32,7 +32,7 @@
   first item is the string value of the head and the second item is a
   lazy sequence of the message body."
   (let [s (stream-seq stream)]
-    ((fn [[h t]] [(clojure.string/split (apply str h) #"(\r\n)+") t])
+    ((fn [[h t]] [(apply str (drop-last 4 h)) t])
      (split-after-subseq s "\r\n\r\n"))))
 
 (defn process-req-ln [req-str]
@@ -42,12 +42,13 @@
 	      :version v})]
        (p (clojure.string/split req-str #" "))))
 
-(defn process-req [head]
+(defn process-req [h]
   "Takes a sequence of strings where the first is the request line and
   the rest are the headers of an HTTP request.  Returns a map with the
   keys :req-ln and :headers, associated with those parts of the
   request."
-  {:req-ln (process-req-ln (first head)) :headers (process-headers (rest head))})
+  (let [head (clojure.string/split (apply str h) #"(\r\n)+")]
+    {:req-ln (process-req-ln (first head)) :headers (process-headers (rest head))}))
 
 (defn extract-req [stream]
   "Extracts the request from the an input stream"
