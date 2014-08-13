@@ -6,19 +6,26 @@ lehs is a hyper-text transfer protocol (http) web server implemented in clojure.
 
 ## How to start a lehs web service
 
-Starting lehs is very easy.  You only need to call one function: `run-server`
+Starting lehs is very easy.  You only need to call one function: `start-server`
 
 ``` clojure
 ; Start lehs, listening for connections on port 8080 (http) and 9999 (https)
-(lehs.core/run-server 8080 9999)
+(lehs.core/start-server 8080 9999)
 ```
 
 Lehs will run indefinitely, handling user-agent requests and sending responses.
 
-You probably dont want to have your entire application hang on the web server, though, so run it as a future:
+To stop the server, use the function `stop-server`:
+
+```clojure
+; stop the running lehs server
+(stop-server)
+```
+
+You probably dont want to have your entire application hang on the web server, though, so start it as a future:
 ```clojure
 ; Start lehs as a background task
-(def lehs-result (future (lehs.core/run-server 8080)))
+(def lehs-result (future (lehs.core/start-server 8080 9999)))
 
 ; When it's finished, it will terminate with the symbol 'clean-exit:
 (if (= 'clean-exit @lehs-result) (println "Lehs terminated correctly")
@@ -118,8 +125,8 @@ TODO: document returning response map structure instead of string (or byte array
 
 ## Project TODOs for 0.1.0 (and add to clojars!):
 
-- [ ] Decode percent-encoding in URI query
+- [X] Decode percent-encoding in URI query
 - [x] Support adding directory contents as a resource, e.g. `(defresource-dir "/images/")` should add all the files in the directory images into the lehs resource map.
-- [ ] HTTPS over SSL
+- [X] HTTPS over SSL
 - [ ] Handle bad client requests with response of error code 400
 - [ ] Keep the documentation rolling!
