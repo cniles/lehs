@@ -16,7 +16,7 @@
      [:li [:a {:href "d"} "Bulletin board"]]
      [:li [:a {:href "/"} "Home"]]
      [:br]
-     [:li [:a {:href "killserver"} "Kill lehs"]]]]
+     [:li [:a {:href "stop"} "Stop Lehs"]]]]
    [:div {:class "sidebar-fill"}]))
 
 (defn make-header [title]
@@ -57,13 +57,13 @@
                          [:input {:type "submit" :value "Submit"}]])))
 
 
-; killserver page
-(defresource "/killserver"
-  (do (kill-server)
-      (make-basic-page "Kill Lehs"
+; stop lehs page
+(defresource "/stop"
+  (do (stop-server)
+      (make-basic-page "Stop Lehs"
 		       (html [:p "The Lehs webserver is shutting down"]))))
 
 (defn -main [& args]
   (System/setProperty "javax.net.ssl.keyStore" "mySrvKeystore")
   (System/setProperty "javax.net.ssl.keyStorePassword" "clojure")
-  (run-server 8080 9999))
+  (start-server 8080 9999))

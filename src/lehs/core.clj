@@ -4,13 +4,10 @@
   (:import [java.net ServerSocket Socket]
            [javax.net.ssl SSLServerSocketFactory]))
 
-(def kill-server? (ref false))
+(def stop-server? (ref false))
 
-(defn- start-server []
-  (dosync (ref-set kill-server? false)))
-
-(defn kill-server []
-  (dosync (ref-set kill-server? true)))
+(defn stop-server []
+  (dosync (ref-set stop-server? true)))
 
 (defn write-to-stream [s d]
   (.write s (if (string? d) (.getBytes d) d)))
@@ -32,13 +29,6 @@
         (write-to-stream (:message res)))))
 
 (defn read-req-and-send-response [socket]
-
-  "Accepts a connection to the server socket (only argument) and sends
-  a response as side effects.  Also sends the processed request and
-  response to stdout.  Returns nil if a request is received to the
-  resource 'killserver', indicating that the server is to die.  Blocks
-  until a socket connection is accepted (per java.net.ServerSocket/accept)"
-
   (try
     (let [req (extract-req (.getInputStream socket))
           response (get-response req)]
@@ -56,7 +46,7 @@
     (loop []
       (try (accept-connection server-socket)
            (catch java.net.SocketTimeoutException e nil))
-      (if @kill-server? nil (recur))))
+      (if @stop-server? nil (recur))))
   
 (defn- create-server-socket [port]
   (ServerSocket. port))
@@ -64,11 +54,11 @@
 (defn- create-ssl-server-socket [port]
   (.createServerSocket (SSLServerSocketFactory/getDefault) port))
 
-(defn run-server [http-port https-port]
+(defn start-server [http-port https-port]
   (with-open [http-server-socket (create-server-socket http-port)
               https-server-socket (create-ssl-server-socket https-port)]
     (println "HTTP Server started on port " http-port "(http), " https-port "(https)")
-    (start-server)
+    (dosync (ref-set stop-server? false))
     (doall (map deref
                 [(future (server-loop http-server-socket))
                  (future (server-loop https-server-socket))]))
