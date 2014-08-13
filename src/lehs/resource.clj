@@ -93,12 +93,12 @@
   (str "<!DOCTYPE html>\n"
        "<html>"
        "<body><h1>404 - Resource not found</h1>"
-       "<p>The specified resource, " path ", could not be found</p></body></html>"))
+       "<p>The specified resource, " path ", could not be found</p></body></html>") "text/html")
 
-; Unsupported operation
+; Unsupported operation or client error
 (defresource :500
   (str "<!DOCTYPE html>\n"
        "<html>"
        "<body><h1>500 - Resource not found</h1>"
-       "<p>Unsupported request</p></body></html>"))
+       "<p>Unsupported request</p></body></html>") "text/html")
 
