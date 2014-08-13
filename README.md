@@ -102,11 +102,12 @@ The result of the following would be to add a resource for each, as "/data/foo.h
 
 You may also return a map structure.  The defresource macro provides
 your resource function with the variable `res`.  This variable
-contains the preliminary response that lehs will send out.  Returning
-a map structure gives you fine-tuned control over the response that
+contains the preliminary response that lehs will send out.
+
+Returning a map structure gives you fine-tuned control over the response that
 lehs sends back to the user agent.  Using the variable `res` as a
 base, you can associate into the map structure additional response
-headers, response codes, etc.  For example, the following snippet sets
+headers, the response code, etc.  For example, the following snippet sets
 the location to include the fragment 'foo' and sets the response code
 to 201.  It also returns in the message part a small web-page:
 
@@ -121,6 +122,8 @@ to 201.  It also returns in the message part a small web-page:
 Keep in mind that you don't need to calculate the message length or do
 any encoding; lehs does that for you automatically (except for
 properly escaping any HTML text you dont want being rendered).
+
+See appendix for full response map format and a description of the function `assoc-in-many`.
 
 # Appendix
 
@@ -144,6 +147,18 @@ properly escaping any HTML text you dont want being rendered).
            :k2 "val"}
  :message byte-array | "string"}
 ```
+
+## lehs.common
+
+- `assoc-in-many` Takes as arguments a map and a vector of map-paths to associate to new values.  For example:
+```clojure
+; define a simple map
+(def m {:a 1 :b {:c 2}})
+; set some paths using assoc-in-many
+(assoc-in-many m [[[:b :d] 4] [[:a] 9]])
+; result is {:a 9 :b {:c 2 :d 4}}
+```
+
 
 ## Project TODOs for 0.1.0 (and add to clojars!):
 
