@@ -113,10 +113,9 @@ to 201.  It also returns in the message part a small web-page:
 
 ```clojure
 (defresource "/d"
-    (let [oid (add-bb-entry message)]
-        (assoc-in-many res [[[:headers :Location] "/d#foo"]
-	                    [[:res-ln :code] 201]
-			    [[:message] "<html><body><p id="foo">Foo</p></body></html>"]])))
+   (assoc-in-many res [[[:headers :Location] "/d#foo"]
+                       [[:res-ln :code] 201]
+                       [[:message] "<html><body><p id="foo">Foo</p></body></html>"]]))
 ```
 
 Keep in mind that you don't need to calculate the message length or do
@@ -158,12 +157,3 @@ See appendix for full response map format and a description of the function `ass
 (assoc-in-many m [[[:b :d] 4] [[:a] 9]])
 ; result is {:a 9 :b {:c 2 :d 4}}
 ```
-
-
-## Project TODOs for 0.1.0 (and add to clojars!):
-
-- [X] Decode percent-encoding in URI query
-- [x] Support adding directory contents as a resource, e.g. `(defresource-dir "/images/")` should add all the files in the directory images into the lehs resource map.
-- [X] HTTPS over SSL
-- [ ] Handle bad client requests with response of error code 400
-- [ ] Keep the documentation rolling!
