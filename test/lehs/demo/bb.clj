@@ -13,7 +13,7 @@
     (.getBytes (html5 [:html
                        [:head (include-css "/data/style.css")]
                        [:body {:class "core"}
-                        (make-header)
+                        (make-header "New Post")
                         [:div {:class "main"}
                          [:div {:class "inner"}
                           [:p [:a {:href "/c"} "Add a post"]]
