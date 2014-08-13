@@ -98,7 +98,29 @@ The result of the following would be to add a resource for each, as "/data/foo.h
 (defresource-dir ".\\data\\")
 ```
 
-TODO: document returning response map structure instead of string (or byte array).
+### Returning a response (map) structure
+
+You may also return a map structure.  The defresource macro provides
+your resource function with the variable `res`.  This variable
+contains the preliminary response that lehs will send out.  Returning
+a map structure gives you fine-tuned control over the response that
+lehs sends back to the user agent.  Using the variable `res` as a
+base, you can associate into the map structure additional response
+headers, response codes, etc.  For example, the following snippet sets
+the location to include the fragment 'foo' and sets the response code
+to 201.  It also returns in the message part a small web-page:
+
+```clojure
+(defresource "/d"
+    (let [oid (add-bb-entry message)]
+        (assoc-in-many res [[[:headers :Location] "/d#foo"]
+	                    [[:res-ln :code] 201]
+			    [[:message] "<html><body><p id="foo">Foo</p></body></html>"]])))
+```
+
+Keep in mind that you don't need to calculate the message length or do
+any encoding; lehs does that for you automatically (except for
+properly escaping any HTML text you dont want being rendered).
 
 # Appendix
 
