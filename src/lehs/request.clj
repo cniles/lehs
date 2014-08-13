@@ -53,7 +53,15 @@
 (defn extract-req [stream]
   "Extracts the request from the an input stream"
   (println "Extracting request")
-  (let [head-and-body (read-head stream)
-        head (process-req (head-and-body 0))]
-    (assoc head :message (decode-message head (head-and-body 1)))))
-
+  (try
+   (let [head-and-body (read-head stream)]
+	(if (= (first head-and-body) "")
+	    nil
+	  (let [head (process-req (head-and-body 0))]
+	       (assoc head :message (decode-message head (head-and-body 1))))))
+   (catch Exception e (do (println "Exception occurred reading request: " (.getMessage e))
+			  {:req-ln {:method :500
+			            :uri {:path :500 :fragment "" :query {}}
+				    :version "HTTP/1.1"}
+			   :headers {}
+			   :message ""}))))
