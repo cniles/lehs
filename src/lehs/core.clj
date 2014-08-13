@@ -12,28 +12,33 @@
 (defn write-to-stream [s d]
   (.write s (if (string? d) (.getBytes d) d)))
 
+
 (defn write-to-gzip-stream [s d]
   (let [gs (java.util.zip.GZIPOutputStream. s)]
     (do (write-to-stream gs d)
         (.finish gs))))
 
 (defn write-response-to-stream [stream res]
-  (do (write-to-stream stream (str (-> res :res-ln :version) " "
-                                   (-> res :res-ln :code) " "
-                                   (-> res :res-ln :reason-phrase) "\r\n"))
-      (doall (map (fn [[k v]] (write-to-stream stream (str (name k) ": " v "\r\n")))
-                  (res :headers)))
-      (write-to-stream stream "\r\n")
-      (if (= "gzip" (get-in res [:headers :Content-Encoding]))
-        (write-to-gzip-stream stream (:message res))
-        (write-to-stream (:message res)))))
+  (try
+   (do (write-to-stream stream (str (-> res :res-ln :version) " "
+				    (-> res :res-ln :code) " "
+				    (-> res :res-ln :reason-phrase) "\r\n"))
+       (doall (map (fn [[k v]] (write-to-stream stream (str (name k) ": " v "\r\n")))
+		   (res :headers)))
+       (write-to-stream stream "\r\n")
+       (if (= "gzip" (get-in res [:headers :Content-Encoding]))
+	   (write-to-gzip-stream stream (:message res))
+	 (write-to-stream stream (:message res))))
+   (catch Exception e (println "Write failed: " (.getMessage e)))))
 
 (defn read-req-and-send-response [socket]
   (try
     (let [req (extract-req (.getInputStream socket))
-          response (get-response req)]
-      (println (str "Sending response:\n" response))
-      (write-response-to-stream (.getOutputStream socket) response))
+          response (if (nil? req) nil (get-response req))]
+	  (if (nil? response)
+	    (println "Client closed without sending a request")
+	    (do (println (str "Sending response:\n" response))
+		(write-response-to-stream (.getOutputStream socket) response))))
     (catch Exception e (do (.printStackTrace e) (println "Exception occured: " (.getMessage e))))))
 
 (defn accept-connection [server-socket]
