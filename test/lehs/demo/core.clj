@@ -5,7 +5,7 @@
         lehs.resource
         lehs.common))
 
-(defresource-dir ".\\data\\")
+(defresource-dir "./data/")
 
 (defn make-sidebar []
   (html 
@@ -19,62 +19,49 @@
      [:li [:a {:href "killserver"} "Kill lehs"]]]]
    [:div {:class "sidebar-fill"}]))
 
-(defn make-header []
-  (html [:div {:class "header"} [:h1 {:class "padded"} "Lehs Demo"]]
+(defn make-header [title]
+  (html [:div {:class "header"} [:h1 {:class "padded"} title]]
         [:div {:class "corner"}]))
 
-
-(defresource "/"
-  (.getBytes (html5[:html
+(defn make-basic-page [title content]
+  (.getBytes (html5 [:html
                     [:head (include-css "/data/style.css")]
                     [:body {:class "core"}
-                     (make-header)
+                     (make-header title)
                      [:div {:class "main"}
-                      [:div {:class "inner"}
-                       [:p "This website is only a series of pages used to test the lehs webserver."]
-                       [:img {:src "/data/smiley.gif" :width "42" :height "42"}]
-                       [:p "Thanks for visiting!"]]]
-                     (make-sidebar)]])))
+                      [:div {:class "inner"} content]]
+		      (make-sidebar)]])))
+
+
+(defresource "/" 
+  (make-basic-page "Lehs Demo"
+		   (html [:p "This website is only a series of pages used to test the lehs webserver."]
+			 [:img {:src "/data/smiley.gif" :width "42" :height "42"}]
+			 [:p "Thanks for visiting!"])))
+	     
 
 (defresource "/a"
-  (.getBytes (html5 [:html
-                     [:head (include-css "/data/style.css")]
-                     [:body {:class "core"}
-                      (make-header)
-                      [:div {:class "main"}
-                       [:div {:class "inner"}
-                       [:p "This is page A"]]]
-                     (make-sidebar)]])))
+  (make-basic-page "Page A"
+		   (html [:p "This is page A"])))
 
 (defresource "/b"
-  (.getBytes (html5 [:html
-                     [:head (include-css "/data/style.css")]
-                     [:body {:class "core"}
-                      (make-header)
-                      [:div {:class "main"}
-                       [:div {:class "inner"}
-                        [:p "This is page B"]]]
-                     (make-sidebar)]])))
+  (make-basic-page "Page B"
+		   (html [:p "This is page B"])))
 
 (defresource "/c"
-  (.getBytes (html5 [:html
-                     [:head (include-css "/data/style.css")]
-                     [:body {:class "core"}
-                      (make-header)
-                      [:div {:class "main"}
-                       [:div {:class "inner"}
-                        [:br]
-                        [:form {:action "d" :method "POST"}
+  (make-basic-page "Bulletin Board"
+		   (html [:br]
+			 [:form {:action "d" :method "POST"}
                          "Name: " [:input {:type "text" :name "Name" :value "anon"}] [:br]
                          "Content: " [:input {:type "text" :name "Content" :value ""}] [:br]
-                         [:input {:type "submit" :value "Submit"}]]]]
-                      (make-sidebar)]])))
+                         [:input {:type "submit" :value "Submit"}]])))
 
 
 ; killserver page
 (defresource "/killserver"
   (do (kill-server)
-      (html5 [:html [:body [:h1 "killing server"]]])))
+      (make-basic-page "Kill Lehs"
+		       (html [:p "The Lehs webserver is shutting down"]))))
 
 (defn -main [& args]
   (System/setProperty "javax.net.ssl.keyStore" "mySrvKeystore")
