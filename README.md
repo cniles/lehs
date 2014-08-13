@@ -8,9 +8,9 @@ lehs is a hyper-text transfer protocol (http) web server implemented in clojure.
 
 Starting lehs is very easy.  You only need to call one function: `run-server`
 
-``` clojuree
-; Start lehs, listening for connections on port 8080
-(lehs.core/run-server 8080)
+``` clojure
+; Start lehs, listening for connections on port 8080 (http) and 9999 (https)
+(lehs.core/run-server 8080 9999)
 ```
 
 Lehs will run indefinitely, handling user-agent requests and sending responses.
