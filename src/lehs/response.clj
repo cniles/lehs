@@ -59,7 +59,7 @@
 
    :500
    (fn [req]
-     (gen-get-response (get-resource req) req 500))
+     (gen-get-response (get-resource :500) req 500))
    }
   )
 
