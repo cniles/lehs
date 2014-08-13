@@ -115,7 +115,7 @@ to 201.  It also returns in the message part a small web-page:
 (defresource "/d"
    (assoc-in-many res [[[:headers :Location] "/d#foo"]
                        [[:res-ln :code] 201]
-                       [[:message] "<html><body><p id="foo">Foo</p></body></html>"]]))
+                       [[:message] "<html><body><p id=\"foo\">Foo</p></body></html>"]]))
 ```
 
 Keep in mind that you don't need to calculate the message length or do
